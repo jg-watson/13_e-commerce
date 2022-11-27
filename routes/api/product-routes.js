@@ -9,15 +9,12 @@ router.get('/', (req, res) => {
   // be sure to include its associated Category and Tag data
   Product.findAll({
     include: [
-     {
-      model: Category,
-      attributes: ['id', 'category_name']
-     },
+      Category,
      {
       model: Tag,
-      attributes: ['id', 'tag_name']
-     }
-    ]
+      through: [ProductTag]
+     },
+    ],
   })
   .then(() => res.json())
   .catch((err) => res.status(400).json(err));
@@ -32,15 +29,12 @@ router.get('/:id', (req, res) => {
       id: req.params.id
     },
     include: [
+      Category,
       {
-        model: Category,
-        attributes: ['id', 'category_name']
+        model: Tag,
+        attributes: [ProductTag],
     },
-    {
-      model: Tag,
-      attributes: ['id', 'tag_name']
-    }
-  ]
+  ],
   })
   .then(() => res.json())
   .catch((err) => res.status(400).json(err));
@@ -60,7 +54,7 @@ router.post('/', (req, res) => {
   Product.create(req.body)
     .then((product) => {
       // if there's product tags, we need to create pairings to bulk create in the ProductTag model
-      if (req.body.tagIds.length) {
+      if (req.body.tagIds && req.body.tagIds.length) {
         const productTagIdArr = req.body.tagIds.map((tag_id) => {
           return {
             product_id: product.id,
